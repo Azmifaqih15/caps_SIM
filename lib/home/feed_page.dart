@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../core/post_service.dart';
+import '../services/post_service.dart';
 
 class FeedPage extends StatefulWidget {
   const FeedPage({super.key});

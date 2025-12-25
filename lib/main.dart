@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'auth/login_page.dart';
-import 'core/auth_service.dart';
+import 'services/auth_service.dart';
 import 'profile/profile_page.dart';
 import 'home/feed_page.dart';
 import 'upload/upload_page.dart';

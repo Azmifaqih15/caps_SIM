@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import '../core/post_service.dart';
+import '../services/post_service.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});

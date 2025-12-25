@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../core/user_service.dart';
-import '../core/auth_service.dart';
+import '../services/user_service.dart';
+import '../services/auth_service.dart';
 import '../auth/login_page.dart';
 
 class ProfilePage extends StatefulWidget {
