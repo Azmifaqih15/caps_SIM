@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../services/post_service.dart';
 
 class FeedPage extends StatefulWidget {
@@ -12,7 +11,6 @@ class FeedPage extends StatefulWidget {
 class _FeedPageState extends State<FeedPage> {
   List posts = [];
   bool loading = true;
-  int? userId;
 
   @override
   void initState() {
@@ -20,10 +18,8 @@ class _FeedPageState extends State<FeedPage> {
     _loadFeed();
   }
 
+  /// ================= LOAD FEED =================
   Future<void> _loadFeed() async {
-    final prefs = await SharedPreferences.getInstance();
-    userId = prefs.getInt('user_id');
-
     try {
       final data = await PostService.getPosts();
       setState(() {
@@ -35,13 +31,11 @@ class _FeedPageState extends State<FeedPage> {
     }
   }
 
+  /// ================= VERIFY POST (JWT) =================
   Future<void> _verify(int postId, String type) async {
-    if (userId == null) return;
-
     bool success = await PostService.verifyPost(
       postId: postId,
-      userId: userId!,
-      type: type,
+      type: type, // CONFIRM / FALSE
     );
 
     if (success) {
@@ -52,7 +46,10 @@ class _FeedPageState extends State<FeedPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Smart Infra'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('Smart Infra'),
+        centerTitle: true,
+      ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -68,21 +65,24 @@ class _FeedPageState extends State<FeedPage> {
     );
   }
 
+  /// ================= POST CARD =================
   Widget _postCard(dynamic post) {
-    Color severityColor = post['severity'] == 'SERIUS'
-        ? Colors.red
-        : Colors.orange;
+    Color severityColor =
+        post['severity'] == 'SERIUS' ? Colors.red : Colors.orange;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           /// IMAGE
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(12)),
             child: Image.network(
               post['image_url'],
               width: double.infinity,
@@ -96,7 +96,7 @@ class _FeedPageState extends State<FeedPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// USER
+                /// USERNAME
                 Text(
                   post['uploaded_by'],
                   style: const TextStyle(fontWeight: FontWeight.bold),
@@ -107,7 +107,8 @@ class _FeedPageState extends State<FeedPage> {
                 /// ADDRESS
                 Text(
                   post['address'],
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  style:
+                      const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
 
                 const SizedBox(height: 8),
@@ -134,19 +135,21 @@ class _FeedPageState extends State<FeedPage> {
 
                 const Divider(),
 
-                /// ACTIONS
+                /// ACTION BUTTONS
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     _actionButton(
                       icon: Icons.thumb_up,
                       label: post['verification']['valid'].toString(),
-                      onTap: () => _verify(post['id'], 'CONFIRM'),
+                      onTap: () =>
+                          _verify(post['id'], 'CONFIRM'),
                     ),
                     _actionButton(
                       icon: Icons.thumb_down,
                       label: post['verification']['false'].toString(),
-                      onTap: () => _verify(post['id'], 'FALSE'),
+                      onTap: () =>
+                          _verify(post['id'], 'FALSE'),
                     ),
                   ],
                 ),
@@ -158,6 +161,7 @@ class _FeedPageState extends State<FeedPage> {
     );
   }
 
+  /// ================= ACTION BUTTON =================
   Widget _actionButton({
     required IconData icon,
     required String label,
@@ -166,7 +170,11 @@ class _FeedPageState extends State<FeedPage> {
     return InkWell(
       onTap: onTap,
       child: Row(
-        children: [Icon(icon, size: 20), const SizedBox(width: 6), Text(label)],
+        children: [
+          Icon(icon, size: 20),
+          const SizedBox(width: 6),
+          Text(label),
+        ],
       ),
     );
   }

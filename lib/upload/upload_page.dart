@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/upload_service.dart';
 
@@ -21,6 +20,7 @@ class _UploadPageState extends State<UploadPage> {
   double? longitude;
   bool loading = false;
 
+  /// ================= PICK IMAGE =================
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(
@@ -37,6 +37,7 @@ class _UploadPageState extends State<UploadPage> {
     await _getLocation();
   }
 
+  /// ================= GET LOCATION + ADDRESS =================
   Future<void> _getLocation() async {
     Position position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
@@ -58,6 +59,7 @@ class _UploadPageState extends State<UploadPage> {
     });
   }
 
+  /// ================= UPLOAD (JWT) =================
   Future<void> _upload() async {
     if (image == null ||
         latitude == null ||
@@ -68,17 +70,11 @@ class _UploadPageState extends State<UploadPage> {
 
     setState(() => loading = true);
 
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('user_id');
-
-    if (userId == null) return;
-
     bool success = await UploadService.uploadPost(
       image: image!,
       latitude: latitude!,
       longitude: longitude!,
       address: address!,
-      userId: userId,
     );
 
     setState(() => loading = false);
@@ -90,11 +86,13 @@ class _UploadPageState extends State<UploadPage> {
       setState(() {
         image = null;
         address = null;
+        latitude = null;
+        longitude = null;
       });
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Upload gagal')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Upload gagal')),
+      );
     }
   }
 
@@ -105,101 +103,70 @@ class _UploadPageState extends State<UploadPage> {
         title: const Text('Upload Laporan'),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              /// AREA PREVIEW GAMBAR
-              GestureDetector(
-                onTap: _pickImage,
-                child: Container(
-                  height: 300,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: Colors.grey),
-                  ),
-                  child: image == null
-                      ? const Center(
-                          child: Icon(
-                            Icons.camera_alt,
-                            size: 50,
-                            color: Colors.grey,
-                          ),
-                        )
-                      : ClipRRect(
-                          borderRadius: BorderRadius.circular(15),
-                          child: Image.file(
-                            image!,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                          ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            /// IMAGE PREVIEW
+            GestureDetector(
+              onTap: _pickImage,
+              child: Container(
+                height: 200,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.grey.shade300,
+                ),
+                child: image == null
+                    ? const Center(
+                        child: Icon(Icons.camera_alt, size: 50),
+                      )
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(
+                          image!,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
                         ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              /// ADDRESS
-              if (address != null)
-                Row(
-                  children: [
-                    const Icon(Icons.location_on, size: 18),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        address!,
-                        style: const TextStyle(fontSize: 12),
                       ),
-                    ),
-                  ],
-                ),
+              ),
+            ),
 
-              const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
-              /// TOMBOL PILIH GAMBAR
+            /// ADDRESS
+            if (address != null)
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  ElevatedButton.icon(
-                    onPressed: loading ? null : _pickImage,
-                    icon: const Icon(Icons.camera),
-                    label: const Text("Camera"),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: loading ? null : _pickImage,
-                    icon: const Icon(Icons.photo_library),
-                    label: const Text("Gallery"),
+                  const Icon(Icons.location_on, size: 18),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      address!,
+                      style: const TextStyle(fontSize: 12),
+                    ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 30),
+            const Spacer(),
 
-              /// TOMBOL UPLOAD
-              SizedBox(
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: loading ? null : _upload,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.secondary,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: loading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          "UPLOAD REPORT",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                ),
+            /// UPLOAD BUTTON
+            ElevatedButton.icon(
+              onPressed: loading ? null : _upload,
+              icon: loading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.cloud_upload),
+              label: const Text('Upload'),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 48),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

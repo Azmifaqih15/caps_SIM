@@ -5,8 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AuthService {
   static const String baseUrl =
       'https://unexchangeable-unstern-robt.ngrok-free.dev';
-  // GANTI kalau pakai HP:
-  // http://IP_KOMPUTER_KAMU:5000
 
   /// ================= LOGIN =================
   static Future<bool> login(String username, String password) async {
@@ -18,10 +16,14 @@ class AuthService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      final user = data['user'];
 
       final prefs = await SharedPreferences.getInstance();
-      prefs.setInt('user_id', user['id']);
+
+      // 🔐 SIMPAN JWT
+      prefs.setString('token', data['token']);
+
+      // 🧑 DATA USER (OPSIONAL)
+      final user = data['user'];
       prefs.setString('username', user['username']);
       prefs.setString('full_name', user['full_name']);
       prefs.setString('role', user['role']);
@@ -61,6 +63,12 @@ class AuthService {
   /// ================= CHECK LOGIN =================
   static Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.containsKey('user_id');
+    return prefs.containsKey('token');
+  }
+
+  /// ================= GET TOKEN (INI YANG HILANG) =================
+  static Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
   }
 }
